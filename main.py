@@ -1,18 +1,18 @@
 import CxSystem as cxs
 import os
-from brian2  import *
+from brian2 import *
 import datetime
 
 
 time_start = datetime.datetime.now()
 
 ### STEP ONE ###
-# CM = cxs.CxSystem(anatomy_and_system_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Rev2_Step1gamma_Anatomy_config_customweights_slurm.csv',
-#                         physiology_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Rev2_Step1gamma_Physiology_config.csv')
+# CM = cxs.CxSystem(anatomy_and_system_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Palermo_Step1_Anatomy_config.csv',
+#                         physiology_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Palermo_Step1_Physiology_config.csv')
 
 ### STEP TWO ###
-CM = cxs.CxSystem(anatomy_and_system_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Rev2_Step2gamma_Anatomy_config_local.csv',
-                        physiology_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Rev2_Step2gamma_Physiology_config.csv')
+CM = cxs.CxSystem(anatomy_and_system_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Palermo_Step2_Anatomy_config.csv',
+                        physiology_config = os.path.dirname(os.path.realpath(__file__)) + '/config_files/Palermo_Step2_Physiology_config.csv')
 
 time_before_run = datetime.datetime.now()
 CM.run()
