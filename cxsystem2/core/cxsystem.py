@@ -1742,9 +1742,18 @@ class CxSystem:
             spikes_name = 'GEN_SP'
             time_name = 'GEN_TI'
             sg_name = 'GEN'
-            spikes_str = 'GEN_SP=b2.tile(arange(%s),%d)' % (number_of_neurons, len(spike_times_))
-            times_str = 'GEN_TI = b2.repeat(%s,%s)*%s' % (spike_times[0:spike_times.index('*')], number_of_neurons, spike_times_unit)
-            sg_str = 'GEN = b2.SpikeGeneratorGroup(%s, GEN_SP, GEN_TI)' % number_of_neurons
+            # If spike times unit is Hz, add period keyword for repetitive firing starting at t=half the period.
+            if spike_times_unit=='Hz':
+                spikes_str = 'GEN_SP=b2.tile(arange(%s),%d)' % (number_of_neurons, 1)
+                period_str = 'GEN_PE = %s*second' % (1/b2.asarray(spike_times_list))
+                # times give the start of first spike, which must be less than the period, thus the 0.5/[period in Hz] below
+                times_str = 'GEN_TI = b2.repeat(0.5/%s,%s)*%s' % (spike_times[0:spike_times.index('*')], number_of_neurons, "second")
+                sg_str = 'GEN = b2.SpikeGeneratorGroup(%s, GEN_SP, GEN_TI, period=GEN_PE)' % number_of_neurons 
+                exec(period_str, globals(), locals())  # running the syntax for period of the input neuron group
+            else:
+                spikes_str = 'GEN_SP=b2.tile(arange(%s),%d)' % (number_of_neurons, len(spike_times_))
+                times_str = 'GEN_TI = b2.repeat(%s,%s)*%s' % (spike_times[0:spike_times.index('*')], number_of_neurons, spike_times_unit)
+                sg_str = 'GEN = b2.SpikeGeneratorGroup(%s, GEN_SP, GEN_TI)' % number_of_neurons 
             exec(spikes_str, globals(), locals())  # running the string
             # containing the syntax for Spike indices in the input neuron group.
             exec(times_str, globals(), locals())  # running the string
