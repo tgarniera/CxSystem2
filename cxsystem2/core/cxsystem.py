@@ -1721,8 +1721,6 @@ class CxSystem:
             spike_times = self.current_values_list[spike_times_idx].replace(' ', ',')
             spike_times_list = ast.literal_eval(spike_times[0:spike_times.index('*')])
 
-            import pdb
-
             num_of_neurons_idx = next(iter(self.current_parameters_list[self.current_parameters_list == 'number_of_neurons'].index))
             number_of_neurons = self.current_values_list[num_of_neurons_idx]
 
@@ -1734,7 +1732,6 @@ class CxSystem:
                 active_neurons_str='arange(0,%s-1,1)' % (number_of_neurons)
 
             tmp_namespace = {"spike_times_": []}
-            # pdb.set_trace()
             exec('tmp_namespace ["spike_times_"] = spike_times_list * %s' % spike_times_unit,
                  locals(), globals())
             spike_times_ = tmp_namespace["spike_times_"]
