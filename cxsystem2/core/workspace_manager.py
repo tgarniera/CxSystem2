@@ -52,6 +52,7 @@ class Workspace:
         self.results_export_path = Path()
         self.connections_export_path = Path()
         self.imported_connections_path = Path()
+        self.trials_per_config = 0
 
     def set_compression_method(self, compression_method):
         self.output_extension = self.compression_to_extension[compression_method]
@@ -121,13 +122,27 @@ class Workspace:
         if key not in self.connections:
             self.connections[key] = {}
 
+    def set_trials_per_config(self, trials_per_config):
+        self.trials_per_config = trials_per_config
+
     def save_results_to_file(self):
         print(" -  Saving results to file ...")
         self.results['Full path'] = self.results_export_path.as_posix()
-        while self.results_export_path.is_file():
-            idx = 1
+        idx = 0
+        filename_stem = self.results_export_path.stem
+
+        # Check if multiple trials expected, set idx suffix to f'_{idx:03d}', to get the first with 3-digit id, too.
+        if self.trials_per_config > 1:
             self.results_export_path = self.results_export_path.parent.joinpath(
-                self.results_export_path.stem + '_{}'.format(idx) + self.results_export_path.suffix)
+                filename_stem + f'_{idx:03d}' + self.results_export_path.suffix)
+        print(f'\n\nelf.trials_per_config = {dir(self)}')
+
+        # Given the filename stem, search for the first unused identification number (idx) to save the current file
+        while self.results_export_path.is_file():
+            # self.results_export_path = self.results_export_path.parent.joinpath(
+            #     self.results_export_path.stem + '_{}'.format(idx) + self.results_export_path.suffix)
+            self.results_export_path = self.results_export_path.parent.joinpath(
+                filename_stem + f'_{idx:03d}' + self.results_export_path.suffix)
             idx += 1
         write_to_file(self.results_export_path.as_posix(), self.results)
         print(" -  The output of the simulation is saved at: {}".format(self.results_export_path))
@@ -135,9 +150,14 @@ class Workspace:
     def save_connections_to_file(self):
         print(" -  Saving connections to file ...")
         self.connections['Full path'] = self.connections_export_path.as_posix()
+        idx = 0
+        filename_stem = self.connections_export_path.stem
+
+        # Given the filename stem, search for the first unused identification number (idx) to save the current file
         while self.connections_export_path.is_file():
-            idx = 1
+            # self.connections_export_path = self.connections_export_path.parent.joinpath(
+            #     self.connections_export_path.stem + '_{}'.format(idx) + self.connections_export_path.suffix)
             self.connections_export_path = self.connections_export_path.parent.joinpath(
-                self.connections_export_path.stem + '_{}'.format(idx) + self.connections_export_path.suffix)
+                filename_stem + f'_{idx:03d}' + self.connections_export_path.suffix)
             idx += 1
         write_to_file(self.connections_export_path.as_posix(), self.connections)
