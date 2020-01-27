@@ -251,9 +251,17 @@ class ArrayRun:
         print("################### Trial %d/%d started running for "
               "simulation number %d: %s ##########################" % (tr + 1,
                                                                        self.trials_per_config, idx, self.final_messages[idx][1:]))
+
+        # Create suffix in case of multiple trials_per_config, start from 000, then 001,...
         tr_suffix = ''
         if self.trials_per_config > 1:
              tr_suffix = '_' + str(tr).zfill(3)
+        # print(f'\n\nself.final_messages[idx] = {self.final_messages[idx]}\n')
+        # print(f'\n\nself.final_messages corrected = {self.final_messages[idx].replace('*','')}\n')
+
+        # Remove asterisk from filename, not allowed in windows and unnecessary in linux
+        self.final_messages[idx] = self.final_messages[idx].replace('*','')
+
         cm = cx.CxSystem(self.df_anat_final_array[idx], self.df_phys_final_array[idx], output_file_suffix=self.final_messages[idx] 
                          + tr_suffix, instantiated_from_array_run=1, array_run_in_cluster=self.array_run_is_in_cluster)
         cm.run()
