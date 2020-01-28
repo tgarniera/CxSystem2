@@ -135,12 +135,9 @@ class Workspace:
         if self.trials_per_config > 1:
             self.results_export_path = self.results_export_path.parent.joinpath(
                 filename_stem + f'_{idx:03d}' + self.results_export_path.suffix)
-        print(f'\n\nelf.trials_per_config = {dir(self)}')
 
         # Given the filename stem, search for the first unused identification number (idx) to save the current file
         while self.results_export_path.is_file():
-            # self.results_export_path = self.results_export_path.parent.joinpath(
-            #     self.results_export_path.stem + '_{}'.format(idx) + self.results_export_path.suffix)
             self.results_export_path = self.results_export_path.parent.joinpath(
                 filename_stem + f'_{idx:03d}' + self.results_export_path.suffix)
             idx += 1
@@ -155,8 +152,6 @@ class Workspace:
 
         # Given the filename stem, search for the first unused identification number (idx) to save the current file
         while self.connections_export_path.is_file():
-            # self.connections_export_path = self.connections_export_path.parent.joinpath(
-            #     self.connections_export_path.stem + '_{}'.format(idx) + self.connections_export_path.suffix)
             self.connections_export_path = self.connections_export_path.parent.joinpath(
                 filename_stem + f'_{idx:03d}' + self.connections_export_path.suffix)
             idx += 1

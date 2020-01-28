@@ -285,7 +285,7 @@ class ArrayRun:
                                                 ' REALLY want it and if you REALLY want it you should konw what to do.'
         # while len(jobs) < number_of_runs:
         while len(jobs) < steps_from_start:
-            time.sleep(1.5)
+            time.sleep(0.1)
             if working.value < self.number_of_process:
                 idx = start_idx + len(jobs)
                 p = multiprocessing.Process(target=self.arr_run, args=(idx, working, paths, self.array_run_stdout_file))
