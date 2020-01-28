@@ -61,7 +61,7 @@ build
 
 # Developer files
 test_notebooks/
-
+.ipynb_checkpoints/
 
 # Output data files which may be big
 
