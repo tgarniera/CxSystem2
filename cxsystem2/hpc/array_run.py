@@ -256,8 +256,6 @@ class ArrayRun:
         tr_suffix = ''
         if self.trials_per_config > 1:
              tr_suffix = '_' + str(tr).zfill(3)
-        # print(f'\n\nself.final_messages[idx] = {self.final_messages[idx]}\n')
-        # print(f'\n\nself.final_messages corrected = {self.final_messages[idx].replace('*','')}\n')
 
         # Remove asterisk from filename, not allowed in windows and unnecessary in linux
         self.final_messages[idx] = self.final_messages[idx].replace('*','')
