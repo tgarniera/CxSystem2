@@ -33,7 +33,11 @@ def get_workspace_path():
 def is_authorized(request):
     session_token = ''
     if "Authorization" in request.headers.keys():
-        session_token = request.headers['Authorization'].split(' ')[1]
+        session_token = request.headers['Authorization'].split(' ')
+        if len(session_token) == 1:
+            session_token = ''
+        else:
+            session_token = session_token[1]
     user_api = "https://services.humanbrainproject.eu/idm/v1/api/user/me"
     headers = {"Authorization": 'Bearer ' + session_token}
     reply = requests.get(user_api, headers=headers)
@@ -93,14 +97,18 @@ def cxspawner_secure(anatomy,
     sys.stdout = open(Path(user_workspace_path).joinpath("cxoutput.out"), "a+")
     print("Process {} started for user {} ".format(os.getpid(), userid))
     start_time = datetime.now()
-    print("[Started] Simulation \"{}\", timestamp: {}".format(sim_title, datetime.now()))
+    print("[{}] Simulation \"{}\" started".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                                                                  sim_title,
+                                                                  datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]))
     print(root_path)
     os.chdir(root_path)
 
     cm = Cx(anatomy, physiology,array_run_stdout_file=Path(user_workspace_path).joinpath("cxoutput.out"))
     cm.run()
     print("Process {} finished for user {} ".format(os.getpid(),userid))
-    print("[Done] Simulation \"{}\" started at [{}]".format(sim_title, start_time))
+    print("[{}] Simulation \"{}\" previously started at {} is now finished".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                                                                                sim_title,
+                                                                                start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]))
 
 
 def sanitize_data(received_data):
@@ -324,7 +332,6 @@ def sim_status(request):
             userid = auth_response.json()['id']
         else:
             return HttpResponse(json.dumps({'authorized': 'false'}), content_type="application/json")
-        infologger.info("User {} checked simulation status".format(userid))
         cx_workspace_path = get_workspace_path()
         user_workspace_path = cx_workspace_path.joinpath(userid)
         user_workspace_path.mkdir(parents=True, exist_ok=True)
@@ -334,7 +341,7 @@ def sim_status(request):
         if outputfile_path.is_file():
             with open(outputfile_path.as_posix(),'r') as f:
                 for line in f:
-                    if '[Started]' in line or '[Done]' in line:
+                    if 'Simulation' in line and ('started' in line or 'is now finished' in line) :
                         sim_finish_lines.append(line)
             output = '&'.join(sim_finish_lines) # just send the last 30 lines
         return HttpResponse(output, content_type='text/plain')

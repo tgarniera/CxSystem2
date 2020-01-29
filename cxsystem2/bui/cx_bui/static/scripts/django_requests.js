@@ -30,7 +30,8 @@ var req_simulate = function () {
                 .replace(/#/g, encodeURIComponent('#'))),
         }),
         beforeSend: function() {
-            let params_tmp =  params_editor.getValue()
+            Show(simulation_status);
+            let params_tmp =  params_editor.getValue();
 
             $('#simulation_status_texts').append(" [Sent] Request submitted for simulation \"" +params_tmp.simulation_title + "\" <br>");
             var status_text_div = document.getElementById("simulation_status");
@@ -185,7 +186,7 @@ var req_simstatus = function () {
 
 window.setInterval(function(){
     req_simstatus();
-}, 10000);
+}, 5000);
 
 $(document).ready( function(){
         $('#simulation_status_texts').append("<br>");  // add two blank lines for visibility

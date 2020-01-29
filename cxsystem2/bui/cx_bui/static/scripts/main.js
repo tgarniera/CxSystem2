@@ -573,3 +573,16 @@ function dragElement(elmnt) {
     document.onmousemove = null;
   }
 }
+
+function Hide(HideID)
+{
+  HideID.classList.remove("hide-for-medium-down");
+  HideID.classList.add("hide");
+}
+
+function Show(ShowID)
+{
+  ShowID.classList.remove("hide");
+  ShowID.classList.add("hide-for-medium-down");
+
+}
