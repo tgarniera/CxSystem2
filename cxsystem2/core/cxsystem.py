@@ -473,7 +473,6 @@ class CxSystem:
             if self.benchmark:
                 self.benchmarking_data['Extract and Save Result'] = self.end_time - self.saving_start_time
                 self.benchmarking_data['Total Time'] = self.end_time - self.start_time
-                import platform
                 self.benchmarking_data['Computer Name'] = platform.node()
                 write_titles = 1 if not self.workspace.get_simulation_folder().joinpath('benchmark.csv').is_file() else 0
                 with open(self.workspace.get_simulation_folder().joinpath('benchmark.csv').as_posix(), 'ab') as f:
@@ -1733,7 +1732,7 @@ class CxSystem:
                 active_neurons_str = 'arange' + spike_times[spike_times.index('[act]') + 5:].replace('-',',')
             else:
                 spike_times_unit = spike_times[spike_times.index('*') + 1:]
-                active_neurons_str='arange(0,%s-1,1)' % (number_of_neurons)
+                active_neurons_str='arange(0,%s,1)' % (number_of_neurons)
 
             tmp_namespace = {"spike_times_": []}
             exec('tmp_namespace ["spike_times_"] = spike_times_list * %s' % spike_times_unit,
@@ -1784,7 +1783,7 @@ class CxSystem:
             # spikes_str = 'GEN_SP=b2.tile(%s,%d)' % (active_neurons_str, len(spike_times_)) # len(spike_times_) should be 1 if unit is Hz
             spikes_str = 'GEN_SP=b2.tile(%s,%d)' % (active_neurons_str, b2.asarray(spike_times_list).size) # len(spike_times_) should be 1 if unit is Hz
             exec(spikes_str, globals(), locals())  # running the string
-            sg_str = 'GEN = b2.SpikeGeneratorGroup(%s, GEN_SP, GEN_TI, period=GEN_PE)' % number_of_neurons 
+            sg_str = 'GEN = b2.SpikeGeneratorGroup(%s, GEN_SP, GEN_TI, period=GEN_PE)' % number_of_neurons
             exec(sg_str, globals(), locals())  # running the string
             # containing the syntax for creating the b2.SpikeGeneratorGroup() based on the input .mat file.
 
