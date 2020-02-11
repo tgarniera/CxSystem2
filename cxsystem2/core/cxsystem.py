@@ -1173,6 +1173,10 @@ class CxSystem:
             index_of_spatial_decay = int(np.where(self.current_parameters_list.values == 'spatial_decay')[0])
         except TypeError:
             pass 
+        try:
+            index_of_custom_weight = int(np.where(self.current_parameters_list.values == 'custom_weight')[0])
+        except TypeError:
+            pass 
         current_post_syn_idx = self.current_values_list.values[index_of_post_syn_idx]
         current_pre_syn_idx = self.current_values_list.values[index_of_pre_syn_idx]
         try:
@@ -1307,13 +1311,20 @@ class CxSystem:
             except (ValueError, NameError):
                 custom_weight = '--'
 
+            # Get spatial decay if defined
+            try:
+                spatial_decay_idx = next(iter(self.current_parameters_list[self.current_parameters_list == 'spatial_decay'].index))
+                spatial_decay = syn[spatial_decay_idx]
+            except (ValueError, NameError):
+                spatial_decay = '0'
+
             # check monitors in line:
             current_idx = len(self.customized_synapses_list)
             # creating a SynapseReference object and passing the positional arguments to it. The main member of
             # the class called output_synapse is then appended to customized_synapses_list:
             self.customized_synapses_list.append(SynapseReference(receptor, pre_syn_idx, post_syn_idx, syn_type,
                                                                   pre_type, post_type, self.physio_config_df, post_comp_name,
-                                                                  custom_weight).output_synapse)
+                                                                  custom_weight, spatial_decay).output_synapse)
             _pre_group_idx = self.neurongroups_list[self.customized_synapses_list[-1]['pre_group_idx']]
             _post_group_idx = self.neurongroups_list[self.customized_synapses_list[-1]['post_group_idx']]
             # Generated variable name for the Synapses(), equation, pre_synaptic and post_synaptic equation and Namespace
@@ -1424,6 +1435,7 @@ class CxSystem:
             #  - connection probability scaled with distance ("expanded mode")
             #  - custom connection rule
             else:
+                # Handle connection probability, it's spatial decay and autoconnection
                 def exp_distance_function(p_arg=None, spatial_decay='0'):
                     if p_arg==None or p_arg == '--':
                         print(' !  No predefined connection probability, '
@@ -1452,6 +1464,7 @@ class CxSystem:
                     elif '[ij]' not in spatial_decay:
                         syn_con_str = "%s.connect(condition='i!=j', p= " % _dyn_syn_name
 
+                    # Calculate connection probability as a function of distance
                     syn_con_str += "'%f*exp(-(%f*meter/mm)*(sqrt((x_pre-x_post)**2+(y_pre-y_post)**2)))'" % (
                         float(p_arg), float(spatial_decay))
                     return syn_con_str
@@ -1467,11 +1480,28 @@ class CxSystem:
                 elif self.sys_mode == 'expanded':
                     try:
                         spatial_decay=syn[index_of_spatial_decay]
+
+                        # If you want weight decay, set connection probability to no decay
+                        if syn[index_of_syn_type] == 'Fixed_spatial_decay_wght':
+                            # In case u need autoconnection with weight decay, leave [ij], but set spatial decay for conne tion probability to 0
+                            if '[ij]' in spatial_decay and not spatial_decay=='[ij]':
+                                _spatial_decay=spatial_decay.replace('[ij]','') # Strip [ij] away temporarily
+                                spatial_decay=spatial_decay.replace( _spatial_decay,'0') 
+                            else:
+                                # Reset decay for connection probability
+                                spatial_decay = '0'
+
                     except (ValueError, NameError):
                         # If the length constant has not been defined, set it to 0 corresponding to local mode, ie no decay with distance
                         spatial_decay = '0'                        
 
- 
+                # If N neurons is different in pre and postsynaptic groups, allow always "autoconnection" 
+                # by appending [ij] to spatial decay. It is not true autoconnection, just a connection to same neuron index.
+                if  self.workspace.results['number_of_neurons'][_pre_group_idx] != \
+                    self.workspace.results['number_of_neurons'][_post_group_idx] \
+                    and '[ij]' not in spatial_decay:
+                        spatial_decay = spatial_decay + '[ij]'
+
                 if '_relay_vpm' in self.neurongroups_list[int(current_pre_syn_idx)] and p_arg==None:
                     spatial_decay = str(1/(2*0.025**2))
 

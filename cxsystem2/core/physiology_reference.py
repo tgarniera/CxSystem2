@@ -750,7 +750,7 @@ class SynapseReference:
     """
 
     def __init__(self, receptor, pre_group_idx, post_group_idx, syn_type, pre_type, post_type, physio_config_df, post_comp_name='_soma',
-                 custom_weight='--'):
+                 custom_weight='--', spatial_decay='0'):
         """
         initializes the SynapseReference based on its arguments.
 
@@ -772,7 +772,7 @@ class SynapseReference:
         * _name_space: An instance of brian2_obj_namespaces() object which contains all the constant parameters for this synaptic equation.
 
         """
-        SynapseReference.syntypes = np.array(['STDP', 'STDP_with_scaling', 'Fixed', 'Fixed_const_wght', 'Fixed_calcium', 'Depressing', 'Facilitating'])
+        SynapseReference.syntypes = np.array(['STDP', 'STDP_with_scaling', 'Fixed', 'Fixed_const_wght', 'Fixed_spatial_decay_wght', 'Fixed_calcium', 'Depressing', 'Facilitating'])
         assert syn_type in SynapseReference.syntypes, " -  Synapse type '%s' is not defined" % syn_type
         self.output_synapse = {'type': syn_type,
                                'receptor': receptor,
@@ -781,7 +781,8 @@ class SynapseReference:
                                'post_group_idx': int(post_group_idx),
                                'post_group_type': post_type,
                                'post_comp_name': post_comp_name,
-                               'custom_weight': custom_weight}
+                               'custom_weight': custom_weight,
+                               'spatial_decay': spatial_decay}
         # self.output_synapse['namespace_type'] = namespace_type
         # self.output_synapse['pre_type'] = pre_group_type
         # self.output_synapse['post_type'] = post_group_type
@@ -792,7 +793,6 @@ class SynapseReference:
             self.output_synapse['sparseness'] = _name_space.sparseness
         except:
             pass
-        # self.output_synapse['ilam'] = _name_space.ilam   # HH commented this, because it's not used right now
 
         # <editor-fold desc="...Model variation setup">
         try:
@@ -963,6 +963,13 @@ class SynapseReference:
                             for true_receptor in self.true_receptors]
             pre_eq = ''.join(pre_eq_lines).rstrip()
             self.output_synapse['pre_eq'] = pre_eq
+
+    def Fixed_spatial_decay_wght(self):
+        """
+        Wrapper. Weight decay is set at cxsystem module. This synapse type is flag for decay
+
+        """
+        self.Fixed_const_wght()
 
     def Fixed_calcium(self):
         """

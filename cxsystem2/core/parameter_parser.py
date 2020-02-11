@@ -57,7 +57,7 @@ class SynapseParser:
         self.output_synapse = output_synapse
         self.physio_config_df = physio_config_df
 
-        SynapseParser.type_ref = np.array(['STDP', 'STDP_with_scaling', 'Fixed', 'Fixed_const_wght', 'Fixed_calcium', 'Fixed_normal', 'Depressing', 'Facilitating'])
+        SynapseParser.type_ref = np.array(['STDP', 'STDP_with_scaling', 'Fixed', 'Fixed_const_wght', 'Fixed_spatial_decay_wght', 'Fixed_calcium', 'Fixed_normal', 'Depressing', 'Facilitating'])
         assert output_synapse['type'] in SynapseParser.type_ref, " -  Synapse type '%s' is not defined." % output_synapse['type']
         self.output_namespace = {}
         # Commented Cp and Cd out because not used in this branch /HH
@@ -268,6 +268,40 @@ class SynapseParser:
         min_delay = mean_delay / 2.
         self.output_namespace['delay'] = '(%f * rand() + %f) * ms' % (mean_delay, min_delay)
 
+    def Fixed_spatial_decay_wght(self):
+        # """
+        # Wrapper, the weight is overridden in cxsystem.. This synapse type is flag for decay
+        # """
+        # self.Fixed_const_wght()
+        """
+        The Fixed method with constant weight for assigning the parameters for Fixed synaptic connection to the customized_synapses() object.
+        """
+
+        # Weight
+        try:
+            mean_wght = eval(self.output_synapse['custom_weight']) / nS
+            print(' ! Using custom weight: %f nS' % mean_wght)
+        except:
+            mean_wght = self.value_extractor(self.physio_config_df,
+                                            'cw_%s_%s' % (self.output_synapse['pre_group_type'], self.output_synapse['post_group_type'])) / nS
+
+        # self.output_namespace['init_wght'] = '%f * nS' % (mean_wght)
+        spatial_decay = self.output_synapse['spatial_decay']
+        # import pdb; pdb.set_trace()
+        assert spatial_decay!='[ij]', "No spatial decay, only autoconnection. Do not use 'Fixed_spatial_decay_wght' synapse type"
+        if '[ij]' in spatial_decay and not spatial_decay=='[ij]':
+            spatial_decay=spatial_decay.replace('[ij]','') # Strip [ij] away
+
+        weight_decay_str = '%s*exp(-(%f/mm)*sqrt((x_pre-x_post)**2+(y_pre-y_post)**2))' % (mean_wght, float(spatial_decay))
+ 
+        self.output_namespace['init_wght'] = '%s * nS' % (weight_decay_str)
+ 
+        # Delay
+        mean_delay = self.value_extractor(self.physio_config_df,
+                                         'delay_%s_%s' % (self.output_synapse['pre_group_type'], self.output_synapse['post_group_type'])) / ms
+        min_delay = mean_delay / 2.
+        self.output_namespace['delay'] = '(%f * rand() + %f) * ms' % (mean_delay, min_delay)
+
     def Fixed_calcium(self):
         """
         The Fixed method for assigning the parameters for Fixed synaptic connection to the customized_synapses() object.
@@ -354,7 +388,7 @@ class SynapseParser:
         # SET the weight (uniform distribution [min_wght, min_wght+mean_wght])
         # NB!! You might think (min_wght, mean_wght) should be the other way around, but remember that rand gives
         # values between 0 and 1, NOT values with mean 0 like randn!
-        self.output_namespace['init_wght'] = '(%f + %f * rand()) * nS' % (min_wght, mean_wght)
+        self.output_namespace[''] = '(%f + %f * rand()) * nS' % (min_wght, mean_wght)
 
         # SET the synaptic delay (uniform distribution [min_delay, min_delay+mean_delay])
         # NB!! Same applies here, see assignment of init_wght
@@ -390,7 +424,7 @@ class SynapseParser:
         # SET the weight (uniform distribution [min_wght, min_wght+mean_wght])
         # NB!! You might think (min_wght, mean_wght) should be the other way around, but remember that rand gives
         # values between 0 and 1, NOT values with mean 0 like randn!
-        self.output_namespace['init_wght'] = '(%f + %f * rand()) * nS' % (min_wght, mean_wght)
+        self.output_namespace[''] = '(%f + %f * rand()) * nS' % (min_wght, mean_wght)
 
         # SET the synaptic delay (uniform distribution [min_delay, min_delay+mean_delay])
         # NB!! Same applies here, see assignment of init_wght
