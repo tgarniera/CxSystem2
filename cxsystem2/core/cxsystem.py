@@ -1761,9 +1761,19 @@ class CxSystem:
             num_of_neurons_idx = next(iter(self.current_parameters_list[self.current_parameters_list == 'number_of_neurons'].index))
             number_of_neurons = self.current_values_list[num_of_neurons_idx]
 
-            if '[act]' in spike_times:
+            if '[act]' in spike_times and spike_times.count('[act]')==1:
                 spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index('[act]')]
-                active_neurons_str = 'arange' + spike_times[spike_times.index('[act]') + 5:].replace('-',',')
+                active_neurons_str = 'np.arange' + spike_times[spike_times.index('[act]') + 5:].replace('-',',')
+            elif '[act]' in spike_times and spike_times.count('[act]')>1:
+                # Check for empty spaces in spike_times string
+                assert ' ' not in spike_times[spike_times.index('[act]'):], 'Remove empty spaces following first "[act]" in input'
+                # Get unit
+                spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index('[act]')]
+                # Build array of numers for the 1-d annulus
+                full_array_string = spike_times[spike_times.index('[act]'):].replace('[act]','np.arange')
+                full_array_string_commas = full_array_string.replace(')np.','),np.')
+                full_array_string_more_commas = full_array_string_commas.replace('-',',')
+                active_neurons_str = 'np.concatenate((' + full_array_string_more_commas + '), axis=0)'
             else:
                 spike_times_unit = spike_times[spike_times.index('*') + 1:]
                 active_neurons_str='arange(0,%s,1)' % (number_of_neurons)
