@@ -1761,19 +1761,41 @@ class CxSystem:
             num_of_neurons_idx = next(iter(self.current_parameters_list[self.current_parameters_list == 'number_of_neurons'].index))
             number_of_neurons = self.current_values_list[num_of_neurons_idx]
 
-            if '[act]' in spike_times and spike_times.count('[act]')==1:
-                spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index('[act]')]
-                active_neurons_str = 'np.arange' + spike_times[spike_times.index('[act]') + 5:].replace('-',',')
-            elif '[act]' in spike_times and spike_times.count('[act]')>1:
-                # Check for empty spaces in spike_times string
-                assert ' ' not in spike_times[spike_times.index('[act]'):], 'Remove empty spaces following first "[act]" in input'
-                # Get unit
-                spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index('[act]')]
-                # Build array of numers for the 1-d annulus
-                full_array_string = spike_times[spike_times.index('[act]'):].replace('[act]','np.arange')
-                full_array_string_commas = full_array_string.replace(')np.','),np.')
-                full_array_string_more_commas = full_array_string_commas.replace('-',',')
-                active_neurons_str = 'np.concatenate((' + full_array_string_more_commas + '), axis=0)'
+            def _on_contrast(spike_times, contrast_type):
+
+                if spike_times.count(contrast_type)==1:
+                    spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index(contrast_type)]
+                    active_neurons_str = 'np.arange' + spike_times[ spike_times.index(contrast_type) + 
+                                                                    len(contrast_type):].replace('-',',')
+                elif spike_times.count(contrast_type)>1:
+                    # Check for empty spaces in spike_times string
+                    assert ' ' not in spike_times[spike_times.index(contrast_type):], 'Remove empty spaces following first "[contrast_type]" in input'
+                    # Get unit
+                    spike_times_unit = spike_times[spike_times.index('*') + 1:spike_times.index(contrast_type)]
+                    # Build array of numers for the 1-d annulus
+                    full_array_string = spike_times[spike_times.index(contrast_type):].replace(contrast_type,'np.arange')
+                    full_array_string_commas = full_array_string.replace(')np.','),np.')
+                    full_array_string_more_commas = full_array_string_commas.replace('-',',')
+                    active_neurons_str = 'np.concatenate((' + full_array_string_more_commas + '), axis=0)'
+
+                return active_neurons_str, spike_times_unit
+                
+            contrast_types = np.array(['[ON]', '[OFF]', '[ACT]'])
+            contrast_type_idx = [contrast_type in spike_times for contrast_type in contrast_types]
+            contrast_type = contrast_types[np.array(contrast_type_idx)]
+
+            # Input contrast indicates which cells are either on or off (all others on). [ACT] is the legacy name for [ON]:
+            if contrast_type:
+                if len(contrast_type) == 1: contrast_type = contrast_type[0] # Leave option open for multiple contrast type in future
+                active_neurons_str, spike_times_unit = _on_contrast(spike_times, contrast_type)
+                if contrast_type == '[OFF]': # invert on indices
+                    all_units = np.arange(0, eval(number_of_neurons))
+                    off_units = eval(active_neurons_str)
+                    on_units = [i for i in all_units if i not in off_units]
+                    # Create valid string from list of on units
+                    _active_neurons_str = np.array2string(np.asarray(on_units),max_line_width=np.inf, separator=',')
+                    active_neurons_str = 'np.array(' + _active_neurons_str + ')'
+
             else:
                 spike_times_unit = spike_times[spike_times.index('*') + 1:]
                 active_neurons_str='arange(0,%s,1)' % (number_of_neurons)
