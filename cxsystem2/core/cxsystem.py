@@ -1779,12 +1779,12 @@ class CxSystem:
                     active_neurons_str = 'np.concatenate((' + full_array_string_more_commas + '), axis=0)'
 
                 return active_neurons_str, spike_times_unit
-                
-            contrast_types = np.array(['[ON]', '[OFF]', '[ACT]'])
+
+            contrast_types = np.array(['[ON]', '[OFF]', '[act]'])
             contrast_type_idx = [contrast_type in spike_times for contrast_type in contrast_types]
             contrast_type = contrast_types[np.array(contrast_type_idx)]
 
-            # Input contrast indicates which cells are either on or off (all others on). [ACT] is the legacy name for [ON]:
+            # Input contrast indicates which cells are either on or off (all others on). [act] is the legacy name for [ON]:
             if contrast_type:
                 if len(contrast_type) == 1: contrast_type = contrast_type[0] # Leave option open for multiple contrast type in future
                 active_neurons_str, spike_times_unit = _on_contrast(spike_times, contrast_type)
